@@ -12,7 +12,7 @@ public class SubwayNetwork {
     }
 
     public void loadData(String filePath) throws Exception{
-        BufferedReader br = new BufferedReader(new FileReader(filePath));
+        BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(filePath), "UTF-8"));
         String line;
         String currentLineName =null;
         while ((line= br.readLine()) !=null) {
@@ -24,8 +24,8 @@ public class SubwayNetwork {
                 currentLineName = line.split("站点间距")[0].trim();
                 lines.putIfAbsent(currentLineName, new Line(currentLineName));
             }
-            else if(line.contains("---")||line.contains("-")){
-                line = line.replace("-","---");
+            else if(line.contains("---")||line.contains("—")){
+                line = line.replace("—","---");
                 String[] parts = line.split("---");
                 if(parts.length !=2){
                     continue;
