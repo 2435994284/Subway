@@ -1,15 +1,15 @@
 import java.util.*;
 public class Line {
     private String name;
-    private List<station> stations;
+    private List<Station> stations;
     public Line(String name) {
         this.name = name;
         this.stations = new ArrayList<>();
     }
-    public void addStation(station station) {
+    public void addStation(Station station) {
         stations.add(station);
     }
-    public List<station>getStations(){
+    public List<Station>getStations(){
         return stations;
     }
     

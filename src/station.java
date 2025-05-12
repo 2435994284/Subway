@@ -1,8 +1,8 @@
 import java.util.*;
-public class station {
+public class Station {
     private String name;
     private Set<String> lines;
-    public void Station (String name){
+    public Station (String name){
         this.name = name;
         this.lines = new HashSet<>();
     }
