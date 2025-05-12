@@ -66,4 +66,14 @@ public class SubwayNetwork {
     public Map<String, Map<String, Double>> getGraph() {
         return graph;
     }
+    public Set<Station>getTransferStations()//识别所有地铁中转站
+    {
+        Set<Station> transferStations = new HashSet<>();
+        for (Station station : stations.values()){
+            if (station.getLines().size() > 1) {
+                transferStations.add(station);
+            }
+        }
+        return transferStations;
+    }
 }
