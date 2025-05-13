@@ -76,4 +76,40 @@ public class SubwayNetwork {
         }
         return transferStations;
     }
+    public List<String> findShortestPath(String start,String end)
+    {
+        Map<String ,Double> distances = new HashMap<>();
+        Map<String, String> previous = new HashMap<>();
+        PriorityQueue<String> pq = new PriorityQueue<>(Comparator.comparingDouble(distances::get));
+
+        for (String station : graph.keySet())
+        {
+            distances.put(station, Double.MAX_VALUE);
+        }
+        distances.put(start, 0.0);
+        pq.add(start);
+        while (!pq.isEmpty()) 
+    {
+        String current = pq.poll();
+        if (current.equals(end)) break;
+        for (Map.Entry<String, Double> neighbor : graph.get(current).entrySet())
+         {
+            String nextStation = neighbor.getKey();
+            double newDist = distances.get(current) + neighbor.getValue();
+            if (newDist < distances.get(nextStation)) {
+                distances.put(nextStation, newDist);
+                previous.put(nextStation, current);
+                pq.add(nextStation);
+            }
+        }
+    }
+    // 生成路径
+    List<String> path = new ArrayList<>();
+    for (String at = end; at != null; at = previous.get(at)) {
+        path.add(at);
+    }
+    Collections.reverse(path);
+    return path;
+
+}
 }
