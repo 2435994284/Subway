@@ -76,7 +76,14 @@ public class SubwayNetwork {
         }
         return transferStations;
     }
-    public List<String> findShortestPath(String start,String end)
+    public List<String> findShortestPath(String start,String end)//Dijkstra算法求出两站最短路径
+    {
+        if (!stations.containsKey(start) || !stations.containsKey(end)) {
+            return Collections.emptyList();
+        }
+        if (start.equals(end)) {
+            return Collections.singletonList(start);
+        }
     {
         Map<String ,Double> distances = new HashMap<>();
         Map<String, String> previous = new HashMap<>();
@@ -103,7 +110,6 @@ public class SubwayNetwork {
             }
         }
     }
-    // 生成路径
     List<String> path = new ArrayList<>();
     for (String at = end; at != null; at = previous.get(at)) {
         path.add(at);
@@ -111,5 +117,93 @@ public class SubwayNetwork {
     Collections.reverse(path);
     return path;
 
+    }
 }
+
+    // 定义一个静态内部类来表示查询结果
+    public static class NearbyStationInfo {
+        private String stationName;
+        private String lineName;
+        private double distance;
+
+        public NearbyStationInfo(String stationName, String lineName, double distance) {
+            this.stationName = stationName;
+            this.lineName = lineName;
+            this.distance = distance;
+        }
+
+        public String getStationName() {
+            return stationName;
+        }
+
+        public String getLineName() {
+            return lineName;
+        }
+
+        public double getDistance() {
+            return distance;
+        }
+
+        @Override
+        public String toString() {
+            return "<" + stationName + "站, " + lineName + ", " + String.format("%.1f", distance) + ">";
+        }
+    }
+
+    public List<NearbyStationInfo> findNearbyStations(String stationName, double maxDistance) {
+        // 检查站点是否存在
+        if (!stations.containsKey(stationName)) {
+            throw new IllegalArgumentException("站点 " + stationName + " 不存在");
+        }
+
+        // 检查距离是否为正数
+        if (maxDistance <= 0) {
+            throw new IllegalArgumentException("距离必须为正数");
+        }
+
+        List<NearbyStationInfo> result = new ArrayList<>();
+        Map<String, Double> distances = new HashMap<>();
+        PriorityQueue<String> queue = new PriorityQueue<>(Comparator.comparingDouble(distances::get));
+
+        // 初始化距离
+        for (String station : graph.keySet()) {
+            distances.put(station, Double.MAX_VALUE);
+        }
+        distances.put(stationName, 0.0);
+        queue.add(stationName);
+
+        // 广度优先搜索
+        while (!queue.isEmpty()) {
+            String current = queue.poll();
+            double currentDistance = distances.get(current);
+            
+            // 如果当前站点距离已经超过最大距离，则终止
+            if (currentDistance > maxDistance) {
+                continue;
+            }
+
+            // 如果不是起始站点，则添加到结果中
+            if (!current.equals(stationName)) {
+                // 获取当前站点所在的所有线路
+                Station currentStation = stations.get(current);
+                for (String line : currentStation.getLines()) {
+                    result.add(new NearbyStationInfo(current, line, currentDistance));
+                }
+            }
+
+            // 遍历相邻站点
+            for (Map.Entry<String, Double> neighbor : graph.get(current).entrySet()) {
+                String nextStation = neighbor.getKey();
+                double newDistance = currentDistance + neighbor.getValue();
+                
+                // 如果新的距离更短且在范围内
+                if (newDistance <= maxDistance && newDistance < distances.get(nextStation)) {
+                    distances.put(nextStation, newDistance);
+                    queue.add(nextStation);
+                }
+            }
+        }
+
+        return result;
+    }
 }
