@@ -7,7 +7,8 @@ public class Test {
         //System.out.println(subway.getGraph());
         //System.out.println(subway.getTransferStations());
         //System.out.println(subway.findShortestPath("华中科技大学", "红霞"));
-        System.out.println(subway.findNearbyStations("华中科技大学", 1.50));
+        //System.out.println(subway.findNearbyStations("华中科技大学", 1.0));
+        System.out.println(subway.findAllPaths("华中科技大学", "红霞"));
+        }
     }
 
-}

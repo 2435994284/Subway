@@ -144,7 +144,6 @@ public class SubwayNetwork {
             return distance;
         }
 
-        @Override
         public String toString() {
             return "<" + stationName + "站, " + lineName + ", " + String.format("%.1f", distance) + ">";
         }
@@ -205,5 +204,51 @@ public class SubwayNetwork {
         }
 
         return result;
+    }
+
+    public List<List<String>> findAllPaths(String start, String end) {
+        // 检查起点站和终点站是否存在
+        if (!stations.containsKey(start)) {
+            throw new IllegalArgumentException("起点站 " + start + " 不存在");
+        }
+        if (!stations.containsKey(end)) {
+            throw new IllegalArgumentException("终点站 " + end + " 不存在");
+        }
+
+        List<List<String>> allPaths = new ArrayList<>();
+        Set<String> visited = new HashSet<>();
+        List<String> currentPath = new ArrayList<>();
+
+        // 从起点站开始深度优先搜索
+        dfs(start, end, visited, currentPath, allPaths);
+
+        return allPaths;
+    }
+
+    //深度优先搜索算法找出所有从当前站点到终点站的无环路径
+    private void dfs(String current, String end, Set<String> visited, 
+                    List<String> currentPath, List<List<String>> allPaths) {
+        // 将当前站点加入已访问集合和当前路径
+        visited.add(current);
+        currentPath.add(current);
+
+        // 如果当前站点是终点站，则找到了一条路径
+        if (current.equals(end)) {
+            allPaths.add(new ArrayList<>(currentPath));
+        } else {
+            // 遍历当前站点的所有相邻站点
+            if (graph.containsKey(current)) {
+                for (String neighbor : graph.get(current).keySet()) {
+                    // 只访问未访问过的站点，避免环路
+                    if (!visited.contains(neighbor)) {
+                        dfs(neighbor, end, visited, currentPath, allPaths);
+                    }
+                }
+            }
+        }
+
+        // 回溯：从已访问集合和当前路径中移除当前站点
+        visited.remove(current);
+        currentPath.remove(currentPath.size() - 1);
     }
 }
