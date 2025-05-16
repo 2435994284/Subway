@@ -251,4 +251,64 @@ public class SubwayNetwork {
         visited.remove(current);
         currentPath.remove(currentPath.size() - 1);
     }
+
+    public void printJourneyGuide(List<String> path) {
+        if (path == null || path.size() <= 1) {
+            System.out.println("路径不完整，无法提供乘车指南。");
+            return;
+        }
+
+        System.out.println("=== 乘车路线指南 ===");
+        String currentLine = null;
+        String startStation = path.get(0);
+        String currentStation = startStation;
+
+        for (int i = 1; i < path.size(); i++) {
+            String nextStation = path.get(i);
+            
+            // 确定当前站点和下一站点之间的线路
+            String connectionLine = findConnectionLine(currentStation, nextStation);
+            
+            // 如果线路改变，说明需要换乘
+            if (currentLine != null && !connectionLine.equals(currentLine)) {
+                System.out.printf("乘坐%s，从%s站到%s站\n", currentLine, startStation, currentStation);
+                startStation = currentStation; // 换乘点成为新的起点
+            }
+            
+            // 更新当前线路
+            currentLine = connectionLine;
+            
+            // 如果是路径的最后一站，需要打印最后一段乘车路线
+            if (i == path.size() - 1) {
+                System.out.printf("乘坐%s，从%s站到%s站\n", currentLine, startStation, nextStation);
+            }
+            
+            currentStation = nextStation;
+        }
+        System.out.println("=== 全程共经过" + (path.size()) + "站 ===");
+    }
+
+
+    private String findConnectionLine(String stationA, String stationB) {
+        // 检查两站是否相邻
+        if (!graph.containsKey(stationA) || !graph.get(stationA).containsKey(stationB)) {
+            throw new IllegalArgumentException("站点" + stationA + "和" + stationB + "不相邻");
+        }
+
+        // 获取两个站点所在的所有线路
+        Set<String> linesA = stations.get(stationA).getLines();
+        Set<String> linesB = stations.get(stationB).getLines();
+        
+        // 查找两站点的共同线路
+        Set<String> commonLines = new HashSet<>(linesA);
+        commonLines.retainAll(linesB);
+        
+        // 如果有共同线路，返回第一条
+        if (!commonLines.isEmpty()) {
+            return commonLines.iterator().next();
+        }
+        
+        // 如果没有共同线路（理论上不应该发生，因为相邻站点必须在同一条线路上）
+        throw new IllegalStateException("无法找到连接" + stationA + "和" + stationB + "的线路");
+    }
 }
