@@ -311,4 +311,95 @@ public class SubwayNetwork {
         // 如果没有共同线路（理论上不应该发生，因为相邻站点必须在同一条线路上）
         throw new IllegalStateException("无法找到连接" + stationA + "和" + stationB + "的线路");
     }
+
+
+    public int calculateFare(List<String> path) {
+        if (path == null || path.size() <= 1) {
+            return 0;
+        }
+
+        // 计算总距离
+        double totalDistance = 0;
+        for (int i = 0; i < path.size() - 1; i++) {
+            String current = path.get(i);
+            String next = path.get(i + 1);
+            if (graph.containsKey(current) && graph.get(current).containsKey(next)) {
+                totalDistance += graph.get(current).get(next);
+            } else {
+                throw new IllegalArgumentException("路径中存在不相邻的站点: " + current + " 和 " + next);
+            }
+        }
+
+        // 根据计价标准计算票价
+        int fare = 0;
+        if (totalDistance <= 4) {
+            fare = 2;
+        } else if (totalDistance <= 12) {
+            fare = 2 + (int) Math.ceil((totalDistance - 4) / 4);
+        } else if (totalDistance <= 24) {
+            fare = 2 + 2 + (int) Math.ceil((totalDistance - 12) / 6);
+        } else if (totalDistance <= 40) {
+            fare = 2 + 2 + 2 + (int) Math.ceil((totalDistance - 24) / 8);
+        } else if (totalDistance <= 50) {
+            fare = 2 + 2 + 2 + 2 + (int) Math.ceil((totalDistance - 40) / 10);
+        } else {
+            fare = 2 + 2 + 2 + 2 + 1 + (int) Math.ceil((totalDistance - 50) / 20);
+        }
+
+        return fare;
+    }
+
+    public Map.Entry<List<String>, Integer> selectPathAndCalculateFare(String start, String end) {
+        List<List<String>> allPaths = findAllPaths(start, end);
+        
+        if (allPaths.isEmpty()) {
+            System.out.println("没有找到从 " + start + " 到 " + end + " 的路径。");
+            return null;
+        }
+
+        Scanner scanner = new Scanner(System.in);
+        
+        System.out.println("以下是从 " + start + " 到 " + end + " 的所有路径：");
+        for (int i = 0; i < allPaths.size(); i++) {
+            List<String> path = allPaths.get(i);
+            System.out.println((i + 1) + ". " + String.join(" -> ", path) + 
+                              " (共" + (path.size() - 1) + "站)");
+        }
+        
+        System.out.print("请选择一条路径（输入序号）: ");
+        int choice;
+        try {
+            choice = Integer.parseInt(scanner.nextLine());
+            if (choice < 1 || choice > allPaths.size()) {
+                System.out.println("无效的选择。");
+                scanner.close();
+                return null;
+            }
+        } catch (NumberFormatException e) {
+            System.out.println("请输入有效的数字。");
+            scanner.close();
+            return null;
+        }
+        
+        List<String> selectedPath = allPaths.get(choice - 1);
+        int fare = calculateFare(selectedPath);
+        
+        System.out.println("\n您选择的路径：" + String.join(" -> ", selectedPath));
+        System.out.println("总距离: " + String.format("%.2f", calculatePathDistance(selectedPath)) + " 公里");
+        System.out.println("票价: " + fare + " 元");
+        
+        scanner.close();
+        return new AbstractMap.SimpleEntry<>(selectedPath, fare);
+    }
+
+
+    private double calculatePathDistance(List<String> path) {
+        double totalDistance = 0;
+        for (int i = 0; i < path.size() - 1; i++) {
+            String current = path.get(i);
+            String next = path.get(i + 1);
+            totalDistance += graph.get(current).get(next);
+        }
+        return totalDistance;
+    }
 }
