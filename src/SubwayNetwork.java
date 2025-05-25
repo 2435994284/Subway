@@ -313,40 +313,67 @@ public class SubwayNetwork {
     }
 
 
-    public int calculateFare(List<String> path) {
+    public int calculateFare(List<String> path, TicketType ticketType) {
         if (path == null || path.size() <= 1) {
             return 0;
         }
 
         // 计算总距离
-        double totalDistance = 0;
-        for (int i = 0; i < path.size() - 1; i++) {
-            String current = path.get(i);
-            String next = path.get(i + 1);
-            if (graph.containsKey(current) && graph.get(current).containsKey(next)) {
-                totalDistance += graph.get(current).get(next);
-            } else {
-                throw new IllegalArgumentException("路径中存在不相邻的站点: " + current + " 和 " + next);
-            }
-        }
+        double totalDistance = calculatePathDistance(path);
 
-        // 根据计价标准计算票价
+        // 根据票价类型计算票价
+        switch (ticketType) {
+            case SINGLE_JOURNEY:
+                return calculateSingleJourneyFare(totalDistance);
+            case WUHAN_TONG:
+                return calculateWuhanTongFare(totalDistance);
+            case ONE_DAY_PASS:
+            case THREE_DAY_PASS:
+            case SEVEN_DAY_PASS:
+                return 0; // 日票在有效期内不额外收费
+            default:
+                throw new IllegalArgumentException("不支持的票价类型");
+        }
+    }
+
+    private int calculateSingleJourneyFare(double distance) {
         int fare = 0;
-        if (totalDistance <= 4) {
+        if (distance <= 4) {
             fare = 2;
-        } else if (totalDistance <= 12) {
-            fare = 2 + (int) Math.ceil((totalDistance - 4) / 4);
-        } else if (totalDistance <= 24) {
-            fare = 2 + 2 + (int) Math.ceil((totalDistance - 12) / 6);
-        } else if (totalDistance <= 40) {
-            fare = 2 + 2 + 2 + (int) Math.ceil((totalDistance - 24) / 8);
-        } else if (totalDistance <= 50) {
-            fare = 2 + 2 + 2 + 2 + (int) Math.ceil((totalDistance - 40) / 10);
+        } else if (distance <= 12) {
+            fare = 2 + (int) Math.ceil((distance - 4) / 4);
+        } else if (distance <= 24) {
+            fare = 2 + 2 + (int) Math.ceil((distance - 12) / 6);
+        } else if (distance <= 40) {
+            fare = 2 + 2 + 2 + (int) Math.ceil((distance - 24) / 8);
+        } else if (distance <= 50) {
+            fare = 2 + 2 + 2 + 2 + (int) Math.ceil((distance - 40) / 10);
         } else {
-            fare = 2 + 2 + 2 + 2 + 1 + (int) Math.ceil((totalDistance - 50) / 20);
+            fare = 2 + 2 + 2 + 2 + 1 + (int) Math.ceil((distance - 50) / 20);
         }
-
         return fare;
+    }
+
+    private int calculateWuhanTongFare(double distance) {
+        int standardFare = calculateSingleJourneyFare(distance);
+        return (int) Math.ceil(standardFare * 0.9); // 武汉通9折，向上取整
+    }
+
+    public int getDayPassPrice(TicketType ticketType) {
+        switch (ticketType) {
+            case ONE_DAY_PASS:
+                return 18;
+            case THREE_DAY_PASS:
+                return 45;
+            case SEVEN_DAY_PASS:
+                return 90;
+            default:
+                throw new IllegalArgumentException("不是有效的日票类型");
+        }
+    }
+
+    public int calculateFare(List<String> path) {
+        return calculateFare(path, TicketType.SINGLE_JOURNEY);
     }
 
     public Map.Entry<List<String>, Integer> selectPathAndCalculateFare(String start, String end) {
@@ -372,33 +399,46 @@ public class SubwayNetwork {
             choice = Integer.parseInt(scanner.nextLine());
             if (choice < 1 || choice > allPaths.size()) {
                 System.out.println("无效的选择。");
-                scanner.close();
                 return null;
             }
         } catch (NumberFormatException e) {
             System.out.println("请输入有效的数字。");
-            scanner.close();
             return null;
         }
         
         List<String> selectedPath = allPaths.get(choice - 1);
-        int fare = calculateFare(selectedPath);
+        double distance = calculatePathDistance(selectedPath);
+        
+        // 计算各种票价
+        int singleJourneyFare = calculateFare(selectedPath, TicketType.SINGLE_JOURNEY);
+        int wuhanTongFare = calculateFare(selectedPath, TicketType.WUHAN_TONG);
         
         System.out.println("\n您选择的路径：" + String.join(" -> ", selectedPath));
-        System.out.println("总距离: " + String.format("%.2f", calculatePathDistance(selectedPath)) + " 公里");
-        System.out.println("票价: " + fare + " 元");
+        System.out.println("总距离: " + String.format("%.2f", distance) + " 公里");
+        System.out.println("\n===== 票价方案 =====");
+        System.out.println("1. 单程票: " + singleJourneyFare + " 元");
+        System.out.println("2. 武汉通(9折): " + wuhanTongFare + " 元");
+        System.out.println("3. 1日票: 0 元 (需先购买18元日票)");
+        System.out.println("4. 3日票: 0 元 (需先购买45元日票)");
+        System.out.println("5. 7日票: 0 元 (需先购买90元日票)");
         
-        scanner.close();
-        return new AbstractMap.SimpleEntry<>(selectedPath, fare);
+        return new AbstractMap.SimpleEntry<>(selectedPath, singleJourneyFare);
     }
 
-
-    private double calculatePathDistance(List<String> path) {
+    public double calculatePathDistance(List<String> path) {
+        if (path == null || path.size() <= 1) {
+            return 0;
+        }
+        
         double totalDistance = 0;
         for (int i = 0; i < path.size() - 1; i++) {
             String current = path.get(i);
             String next = path.get(i + 1);
-            totalDistance += graph.get(current).get(next);
+            if (graph.containsKey(current) && graph.get(current).containsKey(next)) {
+                totalDistance += graph.get(current).get(next);
+            } else {
+                throw new IllegalArgumentException("路径中存在不相邻的站点: " + current + " 和 " + next);
+            }
         }
         return totalDistance;
     }
