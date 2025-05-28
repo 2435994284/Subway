@@ -18,6 +18,7 @@ public class SubwayApp {
                 
                 // 创建并显示主窗口
                 MainFrame frame = new MainFrame(network);
+                frame.setSize(800, 600); 
                 frame.setVisible(true);
             } catch (Exception e) {
                 JOptionPane.showMessageDialog(null, "加载地铁数据失败: " + e.getMessage(), 
