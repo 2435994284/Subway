@@ -1,0 +1,55 @@
+@startuml 武汉地铁查询系统用例图
+
+' 定义样式
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam handwritten false
+skinparam defaultFontName Microsoft YaHei
+skinparam actorStyle awesome
+skinparam usecaseBorderColor black
+skinparam usecaseBackgroundColor white
+
+' 定义角色
+:乘客: as Passenger
+
+' 定义系统框架
+rectangle "武汉地铁查询系统" {
+  ' 主要功能用例
+  usecase "路径查询" as PathQuery
+  usecase "最短路径查询" as ShortestPath
+  usecase "全部路径查询" as AllPaths
+  usecase "获取乘车指南" as JourneyGuide
+  usecase "计算票价" as CalculateFare
+  usecase "计算路程距离" as CalculateDistance
+  
+  ' 辅助功能用例
+  usecase "查询换乘站" as TransferStations
+  usecase "查看换乘站详情" as StationDetails
+  usecase "查询附近站点" as NearbyStations
+
+  ' 票价相关用例
+  usecase "选择票价类型" as SelectTicketType
+  usecase "计算单程票价" as SingleJourneyFare
+  usecase "计算武汉通票价" as WuhanTongFare
+  usecase "计算日票票价" as DayPassFare
+}
+
+' 主要用例关系
+Passenger --> PathQuery
+Passenger --> TransferStations
+Passenger --> NearbyStations
+
+PathQuery ..> ShortestPath : <<包含>>
+PathQuery ..> AllPaths : <<包含>>
+PathQuery ..> JourneyGuide : <<包含>>
+PathQuery ..> CalculateDistance : <<包含>>
+PathQuery ..> CalculateFare : <<包含>>
+
+CalculateFare ..> SelectTicketType : <<包含>>
+SelectTicketType <.. SingleJourneyFare : <<扩展>>
+SelectTicketType <.. WuhanTongFare : <<扩展>>
+SelectTicketType <.. DayPassFare : <<扩展>>
+
+TransferStations ..> StationDetails : <<包含>>
+
+@enduml

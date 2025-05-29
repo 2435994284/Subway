@@ -1,0 +1,155 @@
+@startuml 武汉地铁查询系统类图
+
+' 定义样式
+skinparam classAttributeIconSize 0
+skinparam monochrome true
+skinparam shadowing false
+skinparam defaultFontName Microsoft YaHei
+skinparam classBackgroundColor white
+skinparam classBorderColor black
+skinparam packageBackgroundColor white
+skinparam packageBorderColor black
+
+' Station类
+class Station {
+  - name: String
+  - lines: Set<String>
+  + Station(name: String)
+  + getName(): String
+  + getLines(): Set<String>
+  + addLine(line: String): void
+  + toString(): String
+}
+
+' Line类
+class Line {
+  - name: String
+  - stations: List<Station>
+  + Line(name: String)
+  + addStation(station: Station): void
+  + getStations(): List<Station>
+}
+
+' SubwayNetwork类
+class SubwayNetwork {
+  - stations: Map<String, Station>
+  - lines: Map<String, Line>
+  - graph: Map<String, Map<String, Double>>
+  + SubwayNetwork()
+  + loadData(filePath: String): void
+  + getStations(): Map<String, Station>
+  + getLines(): Map<String, Line>
+  + getGraph(): Map<String, Map<String, Double>>
+  + getTransferStations(): Set<Station>
+  + findShortestPath(start: String, end: String): List<String>
+  + findAllPaths(start: String, end: String): List<List<String>>
+  + printJourneyGuide(path: List<String>): void
+  + findConnectionLine(stationA: String, stationB: String): String
+  + calculateFare(path: List<String>, ticketType: TicketType): int
+  + calculateFare(path: List<String>): int
+  + selectPathAndCalculateFare(start: String, end: String): Map.Entry<List<String>, Integer>
+  + calculatePathDistance(path: List<String>): double
+  + findNearbyStations(stationName: String, maxDistance: double): List<NearbyStationInfo>
+  - dfs(current: String, end: String, visited: Set<String>, currentPath: List<String>, allPaths: List<List<String>>): void
+  - calculateSingleJourneyFare(distance: double): int
+  - calculateWuhanTongFare(distance: double): int
+  + getDayPassPrice(ticketType: TicketType): int
+}
+
+' 内部类NearbyStationInfo - 修正层次结构
+class NearbyStationInfo {
+  - stationName: String
+  - lineName: String
+  - distance: double
+  + NearbyStationInfo(stationName: String, lineName: String, distance: double)
+  + getStationName(): String
+  + getLineName(): String
+  + getDistance(): double
+  + toString(): String
+}
+
+' TicketType枚举
+enum TicketType {
+  SINGLE_JOURNEY
+  WUHAN_TONG
+  ONE_DAY_PASS
+  THREE_DAY_PASS
+  SEVEN_DAY_PASS
+  - description: String
+  + TicketType(description: String)
+  + getDescription(): String
+}
+
+' MainFrame类
+class MainFrame {
+  - network: SubwayNetwork
+  - startStationCombo: JComboBox<String>
+  - endStationCombo: JComboBox<String>
+  - searchButton: JButton
+  - clearButton: JButton
+  - pathList: JList<String>
+  - pathListModel: DefaultListModel<String>
+  - journeyGuideArea: JTextArea
+  - ticketPanel: JPanel
+  - singleJourneyRadio: JRadioButton
+  - wuhanTongRadio: JRadioButton
+  - oneDayPassRadio: JRadioButton
+  - threeDayPassRadio: JRadioButton
+  - sevenDayPassRadio: JRadioButton
+  - fareLabel: JLabel
+  - distanceLabel: JLabel
+  - transferStationList: JList<String>
+  - transferStationListModel: DefaultListModel<String>
+  - transferStationDetailArea: JTextArea
+  - nearbyStationCombo: JComboBox<String>
+  - distanceField: JTextField
+  - searchNearbyButton: JButton
+  - nearbyStationList: JList<String>
+  - nearbyStationListModel: DefaultListModel<String>
+  - currentPaths: List<List<String>>
+  - selectedPath: List<String>
+  - shortestPath: List<String>
+  - shortestPathLabel: JLabel
+  - shortestPathIndex: int
+  + MainFrame(network: SubwayNetwork)
+  - initializeUI(): void
+  - createRouteQueryPanel(): JPanel
+  - createTransferStationPanel(): JPanel
+  - createNearbyStationPanel(): JPanel
+  - createQueryPanel(): JPanel
+  - createPathListPanel(): JPanel
+  - createPathDetailPanel(): JPanel
+  - createTicketPanel(): JPanel
+  - createStatusPanel(): JPanel
+  - loadTransferStations(): void
+  - updateTransferStationDetail(stationName: String): void
+  - searchNearbyStations(): void
+  - searchPaths(): void
+  - updatePathList(): void
+  - updatePathDetails(): void
+  - findConnectionLine(stationA: String, stationB: String): String
+  - updateFareDisplay(): void
+}
+
+' SubwayApp类
+class SubwayApp {
+  + {static} main(args: String[]): void
+}
+
+' JFrame类（外部类）
+class JFrame << javax.swing >>
+
+' 关系定义
+MainFrame --|> JFrame
+SubwayApp ..> MainFrame : creates
+SubwayApp ..> SubwayNetwork : creates
+
+MainFrame --> SubwayNetwork : uses
+SubwayNetwork --> Station : contains
+SubwayNetwork --> Line : contains
+SubwayNetwork --> TicketType : uses
+SubwayNetwork +-- NearbyStationInfo : inner class
+Line --> Station : contains
+MainFrame ..> TicketType : uses
+
+@enduml
